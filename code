@@ -1,0 +1,51 @@
+from Crypto.Cipher import AES
+from Crypto.Random import get_random_bytes
+from Crypto.Util.Padding import pad, unpad
+
+def aes_encrypt(plaintext, key):
+    # Generate a random 16-byte IV (Initialization Vector)
+    iv = get_random_bytes(16)
+    
+    # Create AES cipher object in CBC mode
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    
+    # Pad the plaintext to be a multiple of 16 bytes
+    padded_text = pad(plaintext.encode('utf-8'), AES.block_size)
+    
+    # Encrypt the padded plaintext
+    ciphertext = cipher.encrypt(padded_text)
+    
+    # Return IV concatenated with ciphertext (IV is needed for decryption)
+    return iv + ciphertext
+
+def aes_decrypt(ciphertext, key):
+    # Extract the IV from the first 16 bytes
+    iv = ciphertext[:16]
+    
+    # The actual encrypted data is after the IV
+    encrypted_data = ciphertext[16:]
+    
+    # Create AES cipher object in CBC mode with the same IV
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    
+    # Decrypt and remove padding
+    padded_plaintext = cipher.decrypt(encrypted_data)
+    plaintext = unpad(padded_plaintext, AES.block_size)
+    
+    return plaintext.decode('utf-8')
+
+# Example usage
+if __name__ == "__main__":
+    # Generate a random 32-byte (256-bit) key
+    key = get_random_bytes(32)
+    
+    # Sample plaintext
+    message = "Hello, this is a secret message!"
+    
+    # Encrypt
+    encrypted = aes_encrypt(message, key)
+    print("Encrypted (hex):", encrypted.hex())
+    
+    # Decrypt
+    decrypted = aes_decrypt(encrypted, key)
+    print("Decrypted:", decrypted)
